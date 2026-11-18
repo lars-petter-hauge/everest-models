@@ -35,6 +35,7 @@ def test_get_forward_model_schemas_hook(plugin_manager):
     assert not set(plugin_manager.hook.get_forward_models_schemas().pop()) - {
         "add_templates",
         "compute_economics",
+        "distance_calculator",
         "drill_planner",
         "npv",
         "well_trajectory",
