@@ -136,17 +136,17 @@ def _indexed_distances(
 def _cache_cell_distances(
     centers: Sequence[Point], measure: Callable[[Point], float]
 ) -> _DistanceLookup:
-    selected: dict[int, float] = {}
+    computed: dict[int, float] = {}
     full_grid: list[float] | None = None
 
     def full_grid_distances() -> Sequence[float]:
         nonlocal full_grid
         if full_grid is None:
             full_grid = [
-                selected[index] if index in selected else measure(center)
+                computed[index] if index in computed else measure(center)
                 for index, center in enumerate(centers)
             ]
-            selected.clear()
+            computed.clear()
         return full_grid
 
     def distances_for(indices: set[int]) -> _IndexedDistances:
@@ -154,9 +154,9 @@ def _cache_cell_distances(
             yield from _indexed_distances(full_grid_distances(), indices)
             return
         for index in indices:
-            if index not in selected:
-                selected[index] = measure(centers[index])
-            yield index, selected[index]
+            if index not in computed:
+                computed[index] = measure(centers[index])
+            yield index, computed[index]
 
     return distances_for, full_grid_distances
 
