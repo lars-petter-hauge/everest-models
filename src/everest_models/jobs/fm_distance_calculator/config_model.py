@@ -99,6 +99,9 @@ class DistanceConfig(ModelConfig):
     def introspective_data(
         cls, minimal: bool, no_comment: bool = False
     ) -> dict[str, Any]:
+        # The generic introspection cannot expand `distance_calculations`: a list
+        # of a discriminated union is reduced to a placeholder, and the field
+        # alias is ignored. Build one example entry per calculation type instead.
         def set_value(fields: dict[str, Any], key: str, value: Any) -> None:
             if isinstance(field := fields[key], CommentedObject):
                 field.value = value
