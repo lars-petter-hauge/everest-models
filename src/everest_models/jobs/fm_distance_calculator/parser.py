@@ -1,4 +1,5 @@
 import argparse
+from functools import partial
 from pathlib import Path
 
 from everest_models.jobs.shared.arguments import (
@@ -6,6 +7,7 @@ from everest_models.jobs.shared.arguments import (
     bootstrap_parser,
     get_parser,
 )
+from everest_models.jobs.shared.validators import parse_file
 
 from .config_model import DistanceConfig
 
@@ -22,7 +24,7 @@ def build_argument_parser(skip_type: bool = False) -> argparse.ArgumentParser:
         "-c",
         "--config",
         required=True,
-        type=Path if not skip_type else str,
+        type=partial(parse_file, schema=DistanceConfig) if not skip_type else str,
         help="Distance calculation configuration file in YAML format.",
     )
     model_group = parser.add_argument_group("case input")

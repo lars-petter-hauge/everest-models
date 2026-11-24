@@ -1,3 +1,4 @@
+import argparse
 import math
 from datetime import date
 from pathlib import Path
@@ -10,7 +11,6 @@ from ruamel.yaml import YAML
 
 from everest_models.forward_models import get_forward_models
 from everest_models.jobs.fm_distance_calculator import tasks as distance_tasks
-from everest_models.jobs.fm_distance_calculator.cli import load_config
 from everest_models.jobs.fm_distance_calculator.config_model import (
     DistanceConfig,
     PolygonCalculation,
@@ -21,18 +21,25 @@ from everest_models.jobs.fm_distance_calculator.tasks import (
     point_to_segment_distance_3d,
     run,
 )
+from everest_models.jobs.shared.validators import parse_file
 
 
-def test_forward_model_is_discovered_and_parser_accepts_case_base():
+def test_forward_model_is_discovered_and_parser_accepts_case_base(tmp_path):
     assert "distance_calculator" in get_forward_models()
 
-    options = build_argument_parser().parse_args(
-        ["-c", "distances.yml", "-cn", "model/CASE"]
+    config_path = tmp_path / "distances.yml"
+    config_path.write_text(
+        "distance-calculations:\n  - type: well\n    name: PROD\n    output: distance\n",
+        encoding="utf-8",
     )
+    options = build_argument_parser().parse_args(
+        ["-c", str(config_path), "-cn", "model/CASE"]
+    )
+    assert isinstance(options.config, DistanceConfig)
     assert options.case_name.name == "CASE"
     assert options.egrid is None
     options = build_argument_parser().parse_args(
-        ["-c", "distances.yml", "-cn", "model/CASE", "--egrid", "model/OTHER.EGRID"]
+        ["-c", str(config_path), "-cn", "model/CASE", "--egrid", "model/OTHER.EGRID"]
     )
     assert options.case_name.name == "CASE"
     assert options.egrid.name == "OTHER.EGRID"
@@ -42,8 +49,8 @@ def test_load_config_requires_distance_calculations(tmp_path):
     config_path = tmp_path / "config.yml"
     config_path.write_text("distance-calculations: []\n", encoding="utf-8")
 
-    with pytest.raises(ValidationError, match="at least 1 item"):
-        load_config(config_path)
+    with pytest.raises(argparse.ArgumentTypeError, match="at least 1 item"):
+        parse_file(str(config_path), DistanceConfig)
 
 
 def test_load_config_validates_nested_property_and_polygon_points(tmp_path):
@@ -61,7 +68,7 @@ def test_load_config_validates_nested_property_and_polygon_points(tmp_path):
         encoding="utf-8",
     )
 
-    calculation = load_config(config_path).distance_calculations[0]
+    calculation = parse_file(str(config_path), DistanceConfig).distance_calculations[0]
     assert isinstance(calculation, PolygonCalculation)
     assert calculation.points == ((0, 0, 0), (1, 0, 0))
     assert calculation.properties[0].date == date(2040, 1, 1)
@@ -153,7 +160,7 @@ def test_reference_config_covers_all_distance_types():
         / "distance_calculator"
         / "example.yml"
     )
-    calculations = load_config(config_path).distance_calculations
+    calculations = parse_file(str(config_path), DistanceConfig).distance_calculations
     assert {calculation.type for calculation in calculations} == {
         "fault",
         "well",
