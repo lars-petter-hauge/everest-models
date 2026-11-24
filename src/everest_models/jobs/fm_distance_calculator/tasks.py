@@ -423,7 +423,7 @@ def _no_distance(calculation: DistanceCalculation) -> RuntimeError:
     )
 
 
-def run(config: DistanceConfig, case: Any) -> int:
+def run(config: DistanceConfig, case: Any) -> None:
     output_dir = Path.cwd().resolve()
     fault_names = {
         calculation.name
@@ -482,4 +482,3 @@ def run(config: DistanceConfig, case: Any) -> int:
             map_path,
             well_connection_count=well_connection_count,
         )
-    return 0

@@ -225,22 +225,19 @@ def test_fault_distance_uses_generated_resinsight_property_and_excludes_zero(
         grid_property=lambda *_args: [0.0, 1.0],
     )
 
-    assert (
-        run(
-            DistanceConfig.model_validate(
-                {
-                    "distance-calculations": [
-                        {
-                            "type": "fault",
-                            "name": "F4",
-                            "output": "F4_DISTANCE",
-                        }
-                    ]
-                }
-            ),
-            case,
-        )
-        == 0
+    run(
+        DistanceConfig.model_validate(
+            {
+                "distance-calculations": [
+                    {
+                        "type": "fault",
+                        "name": "F4",
+                        "output": "F4_DISTANCE",
+                    }
+                ]
+            }
+        ),
+        case,
     )
     assert (tmp_path / "F4_DISTANCE").read_text() == "1\n"
 
@@ -301,22 +298,19 @@ def test_well_distance_uses_connected_cells_and_excludes_zero(tmp_path, monkeypa
         time_steps=lambda: [date(2040, 1, 1)],
     )
 
-    assert (
-        run(
-            DistanceConfig.model_validate(
-                {
-                    "distance-calculations": [
-                        {
-                            "type": "well",
-                            "name": "LEG_1",
-                            "output": "LEG_1_DISTANCE",
-                        }
-                    ]
-                }
-            ),
-            case,
-        )
-        == 0
+    run(
+        DistanceConfig.model_validate(
+            {
+                "distance-calculations": [
+                    {
+                        "type": "well",
+                        "name": "LEG_1",
+                        "output": "LEG_1_DISTANCE",
+                    }
+                ]
+            }
+        ),
+        case,
     )
     assert (tmp_path / "LEG_1_DISTANCE").read_text() == "5\n"
 
@@ -369,7 +363,7 @@ def test_run_defaults_aggregation_and_distance_map(
         {"distance-calculations": [calculation], **default_verbose}
     )
 
-    assert run(config, case) == 0
+    run(config, case)
     assert (tmp_path / "P1_POLYGON_DISTANCE").read_text() == expected_scalar
     map_path = tmp_path / "P1_POLYGON_DISTANCE_map"
     assert map_path.exists() is expected_map
@@ -439,7 +433,7 @@ def test_output_date_controls_timestep_filter(
         }
     )
 
-    assert run(config, case) == 0
+    run(config, case)
     assert (tmp_path / "P1_POLYGON_DISTANCE").read_text() == expected_distance
     assert (
         f"SGAS >= 0.1 @ {expected_scope} ({expected_cell_count} cells)"
@@ -494,7 +488,7 @@ def test_properties_select_cells_passing_all_filters_on_their_own_dates(
         }
     )
 
-    assert run(config, case) == 0
+    run(config, case)
     assert (tmp_path / "P1_POLYGON_DISTANCE").read_text() == "1\n"
     assert (
         "SGAS >= 0.1 @ 2040-01-01 AND SWAT >= 0.1 @ 2041-01-01 (1 cells)"
@@ -567,7 +561,7 @@ def test_scalar_distances_only_measure_selected_cells(
         }
     )
 
-    assert run(config, case) == 0
+    run(config, case)
     assert (tmp_path / "early").read_text() == "2\n"
     assert (tmp_path / "late").read_text() == "1\n"
     assert (tmp_path / "early_again").read_text() == "2\n"

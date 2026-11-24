@@ -6,7 +6,7 @@ from .parser import build_argument_parser
 from .tasks import run
 
 
-def main_entry_point(args=None) -> int:
+def main_entry_point(args=None):
     parser = build_argument_parser()
     options = parser.parse_args(args)
 

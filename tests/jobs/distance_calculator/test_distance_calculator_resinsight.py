@@ -43,9 +43,7 @@ def test_distance_calculator_cli_all_targets(
     monkeypatch.chdir(tmp_path)
     config_path = distance_case_path.with_name("spe1_co2_distances.yml")
 
-    assert (
-        main_entry_point(["-c", str(config_path), "-cn", str(distance_case_path)]) == 0
-    )
+    main_entry_point(["-c", str(config_path), "-cn", str(distance_case_path)])
 
     # verify which cell has been selected to have minimum distance
     output = capsys.readouterr().out
@@ -105,7 +103,7 @@ def test_polygon_property_selection_and_aggregation(
         "aggregation": aggregation,
     }
     config = DistanceConfig.model_validate({"distance-calculations": [calculation]})
-    assert run(config, distance_case) == 0
+    run(config, distance_case)
     assert float((tmp_path / "DISTANCE").read_text()) == pytest.approx(
         expected_distance_m, abs=1e-5
     )
@@ -157,7 +155,7 @@ def test_well_distance_excludes_connected_cells(distance_case, tmp_path, monkeyp
         "output": "DISTANCE",
     }
     config = DistanceConfig.model_validate({"distance-calculations": [calculation]})
-    assert run(config, distance_case) == 0
+    run(config, distance_case)
     assert float((tmp_path / "DISTANCE").read_text()) == pytest.approx(1000), (
         "The closest cell outside PROD's completed column is one grid cell away"
     )
