@@ -13,28 +13,28 @@ distance-calculations:
     # Required: True
     type: fault
 
-    # Optional property filter. If omitted, use all active cells.
+    # Optional property filters; a cell is selected if it passes all of them. If omitted, use all active cells.
     # Required: False
-    # Default: null
-    property:
+    properties:
+      -
 
-      # Dynamic grid property, for example SGAS.
-      # Datatype: string
-      # Examples: a string value
-      # Required: True
-      name: <REPLACE>
+        # Dynamic grid property, for example SGAS.
+        # Datatype: string
+        # Examples: a string value
+        # Required: True
+        name: <REPLACE>
 
-      # Inclusive lower bound for selecting active cells.
-      # Datatype: number
-      # Required: False
-      # Default: 0.0
-      threshold: 0.0
+        # Inclusive lower bound for selecting active cells.
+        # Datatype: number
+        # Required: False
+        # Default: 0.0
+        threshold: 0.0
 
-      # Report date (YYYY-MM-DD). If omitted, use cells qualifying at any report.
-      # Datatype: date
-      # Required: False
-      # Default: null
-      date: null
+        # Report date (YYYY-MM-DD). If omitted, use cells qualifying at any report.
+        # Datatype: date
+        # Required: False
+        # Default: null
+        date: null
 
     # Statistic over finite, positive distances: min, max, mean, or median.
     # Datatype: string
@@ -72,28 +72,28 @@ distance-calculations:
     # Required: True
     type: well
 
-    # Optional property filter. If omitted, use all active cells.
+    # Optional property filters; a cell is selected if it passes all of them. If omitted, use all active cells.
     # Required: False
-    # Default: null
-    property:
+    properties:
+      -
 
-      # Dynamic grid property, for example SGAS.
-      # Datatype: string
-      # Examples: a string value
-      # Required: True
-      name: <REPLACE>
+        # Dynamic grid property, for example SGAS.
+        # Datatype: string
+        # Examples: a string value
+        # Required: True
+        name: <REPLACE>
 
-      # Inclusive lower bound for selecting active cells.
-      # Datatype: number
-      # Required: False
-      # Default: 0.0
-      threshold: 0.0
+        # Inclusive lower bound for selecting active cells.
+        # Datatype: number
+        # Required: False
+        # Default: 0.0
+        threshold: 0.0
 
-      # Report date (YYYY-MM-DD). If omitted, use cells qualifying at any report.
-      # Datatype: date
-      # Required: False
-      # Default: null
-      date: null
+        # Report date (YYYY-MM-DD). If omitted, use cells qualifying at any report.
+        # Datatype: date
+        # Required: False
+        # Default: null
+        date: null
 
     # Statistic over finite, positive distances: min, max, mean, or median.
     # Datatype: string
@@ -131,28 +131,28 @@ distance-calculations:
     # Required: True
     type: polygon
 
-    # Optional property filter. If omitted, use all active cells.
+    # Optional property filters; a cell is selected if it passes all of them. If omitted, use all active cells.
     # Required: False
-    # Default: null
-    property:
+    properties:
+      -
 
-      # Dynamic grid property, for example SGAS.
-      # Datatype: string
-      # Examples: a string value
-      # Required: True
-      name: <REPLACE>
+        # Dynamic grid property, for example SGAS.
+        # Datatype: string
+        # Examples: a string value
+        # Required: True
+        name: <REPLACE>
 
-      # Inclusive lower bound for selecting active cells.
-      # Datatype: number
-      # Required: False
-      # Default: 0.0
-      threshold: 0.0
+        # Inclusive lower bound for selecting active cells.
+        # Datatype: number
+        # Required: False
+        # Default: 0.0
+        threshold: 0.0
 
-      # Report date (YYYY-MM-DD). If omitted, use cells qualifying at any report.
-      # Datatype: date
-      # Required: False
-      # Default: null
-      date: null
+        # Report date (YYYY-MM-DD). If omitted, use cells qualifying at any report.
+        # Datatype: date
+        # Required: False
+        # Default: null
+        date: null
 
     # Statistic over finite, positive distances: min, max, mean, or median.
     # Datatype: string

@@ -38,9 +38,9 @@ class PropertyFilter(ModelConfig):
 
 
 class Calculation(ModelConfig):
-    property: PropertyFilter | None = Field(
-        default=None,
-        description="Optional property filter. If omitted, use all active cells.",
+    properties: list[PropertyFilter] = Field(
+        default_factory=list,
+        description="Optional property filters; a cell is selected if it passes all of them. If omitted, use all active cells.",
     )
     aggregation: Aggregation = Field(
         default="min",
@@ -127,7 +127,7 @@ class DistanceConfig(ModelConfig):
             if not minimal:
                 property_fields = PropertyFilter.introspective_data(minimal, no_comment)
                 set_value(property_fields, "date", None)
-                set_value(fields, "property", property_fields)
+                set_value(fields, "properties", [property_fields])
                 set_value(fields, "verbose", None)
             if model is PolygonCalculation:
                 points = fields["points"]

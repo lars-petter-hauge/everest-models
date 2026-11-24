@@ -100,7 +100,7 @@ def test_polygon_property_selection_and_aggregation(
     calculation = {
         "type": "polygon",
         "points": POLYGON,
-        "property": {"name": "sgas", "threshold": 0.01, "date": report_date},
+        "properties": [{"name": "sgas", "threshold": 0.01, "date": report_date}],
         "output": "DISTANCE",
         "aggregation": aggregation,
     }
@@ -113,36 +113,36 @@ def test_polygon_property_selection_and_aggregation(
 
 
 @pytest.mark.parametrize(
-    ("target", "property_filter", "message"),
+    ("target", "properties", "message"),
     [
         (
             {"type": "polygon", "points": POLYGON},
-            {"name": "sgas", "threshold": 0.01, "date": "2015-01-01"},
+            [{"name": "sgas", "threshold": 0.01, "date": "2015-01-01"}],
             "no finite positive distance",
         ),
         (
             {"type": "polygon", "points": POLYGON},
-            {"name": "swat", "date": "2015-01-03"},
+            [{"name": "swat", "date": "2015-01-03"}],
             "Report date",
         ),
         (
             {"type": "fault", "name": "MISSING"},
-            None,
+            [],
             "were not found",
         ),
         (
             {"type": "well", "name": "MISSING"},
-            None,
+            [],
             "Simulation well 'MISSING' not found",
         ),
     ],
     ids=["empty-plume", "unknown-report-date", "unknown-fault", "unknown-well"],
 )
 def test_calculation_without_a_result_fails(
-    distance_case, tmp_path, monkeypatch, target, property_filter, message
+    distance_case, tmp_path, monkeypatch, target, properties, message
 ):
     monkeypatch.chdir(tmp_path)
-    calculation = {**target, "property": property_filter, "output": "DISTANCE"}
+    calculation = {**target, "properties": properties, "output": "DISTANCE"}
     config = DistanceConfig.model_validate({"distance-calculations": [calculation]})
     with pytest.raises(RuntimeError, match=message):
         run(config, distance_case)

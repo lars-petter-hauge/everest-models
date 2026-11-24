@@ -52,10 +52,10 @@ def test_load_config_validates_nested_property_and_polygon_points(tmp_path):
         "distance-calculations:\n"
         "  - type: polygon\n"
         "    points: [[0, 0, 0], [1, 0, 0]]\n"
-        "    property:\n"
-        "      name: sgas\n"
-        "      threshold: 0.1\n"
-        "      date: 2040-01-01\n"
+        "    properties:\n"
+        "      - name: sgas\n"
+        "        threshold: 0.1\n"
+        "        date: 2040-01-01\n"
         "    multiplier: 0.001\n"
         "    output: distance\n",
         encoding="utf-8",
@@ -64,8 +64,7 @@ def test_load_config_validates_nested_property_and_polygon_points(tmp_path):
     calculation = load_config(config_path).distance_calculations[0]
     assert isinstance(calculation, PolygonCalculation)
     assert calculation.points == ((0, 0, 0), (1, 0, 0))
-    assert calculation.property is not None
-    assert calculation.property.date == date(2040, 1, 1)
+    assert calculation.properties[0].date == date(2040, 1, 1)
 
 
 @pytest.mark.parametrize(
@@ -75,27 +74,32 @@ def test_load_config_validates_nested_property_and_polygon_points(tmp_path):
         pytest.param({"unit-conversion": 1000}, "extra_forbidden", id="old-unit"),
         pytest.param({"name": ""}, "string_too_short", id="empty-name"),
         pytest.param({"aggregation": "sum"}, "literal_error", id="aggregation"),
-        pytest.param({"property": "sgas"}, "model_type", id="old-property"),
         pytest.param(
-            {"property": {"name": ["sgas"]}}, "string_type", id="property-list"
+            {"property": [{"name": "sgas"}]}, "extra_forbidden", id="old-property"
         ),
         pytest.param(
-            {"property": {"name": "sgas, swat"}},
+            {"properties": {"name": "sgas"}}, "list_type", id="properties-mapping"
+        ),
+        pytest.param(
+            {"properties": [{"name": ["sgas"]}]}, "string_type", id="name-list"
+        ),
+        pytest.param(
+            {"properties": [{"name": "sgas, swat"}]},
             "string_pattern_mismatch",
             id="comma-separated-properties",
         ),
         pytest.param(
-            {"property": {"name": "sgas", "threshold": [0.1]}},
+            {"properties": [{"name": "sgas", "threshold": [0.1]}]},
             "float_type",
             id="threshold-list",
         ),
         pytest.param(
-            {"property": {"name": "sgas", "date": ["2040-01-01"]}},
+            {"properties": [{"name": "sgas", "date": ["2040-01-01"]}]},
             "value_error",
             id="date-list",
         ),
         pytest.param(
-            {"property": {"name": "sgas", "date": "2040-02-31"}},
+            {"properties": [{"name": "sgas", "date": "2040-02-31"}]},
             "date_from_datetime_parsing",
             id="invalid-date",
         ),
@@ -130,7 +134,7 @@ def test_model_schema_shows_all_calculation_types():
         "well",
         "polygon",
     ]
-    assert calculations[0]["property"]["threshold"] == 0.0
+    assert calculations[0]["properties"][0]["threshold"] == 0.0
     assert len(calculations[2]["points"]) == 2
 
 
@@ -256,7 +260,7 @@ def test_empty_property_filter_fails_before_fault_lookup(monkeypatch):
                 {
                     "type": "fault",
                     "name": "F4",
-                    "property": {"name": "SGAS", "threshold": 0.1},
+                    "properties": [{"name": "SGAS", "threshold": 0.1}],
                     "output": "F4_DISTANCE",
                 }
             ]
@@ -419,7 +423,9 @@ def test_output_date_controls_timestep_filter(
                 {
                     "type": "polygon",
                     "points": [[0, 0, 0], [3, 0, 0]],
-                    "property": {"name": "sgas", "threshold": 0.1, "date": output_date},
+                    "properties": [
+                        {"name": "sgas", "threshold": 0.1, "date": output_date}
+                    ],
                     "output": "P1_POLYGON_DISTANCE",
                 }
             ]
@@ -430,6 +436,61 @@ def test_output_date_controls_timestep_filter(
     assert (tmp_path / "P1_POLYGON_DISTANCE").read_text() == expected_distance
     assert (
         f"SGAS >= 0.1 @ {expected_scope} ({expected_cell_count} cells)"
+        in capsys.readouterr().out
+    )
+
+
+def test_properties_select_cells_passing_all_filters_on_their_own_dates(
+    tmp_path, monkeypatch, capsys
+):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        distance_tasks,
+        "rips",
+        SimpleNamespace(PropertyType=SimpleNamespace(DYNAMIC_NATIVE="dynamic")),
+    )
+    centers = [
+        SimpleNamespace(x=1.0, y=2.0, z=0.0),
+        SimpleNamespace(x=2.0, y=1.0, z=0.0),
+        SimpleNamespace(x=5.0, y=1.0, z=0.0),
+    ]
+    grid = SimpleNamespace(
+        dimensions=lambda: SimpleNamespace(i=3, j=1, k=1),
+        cell_centers=lambda: centers,
+    )
+    values_by_timestep = [[0.2, 0.2, 0.0], [0.0, 0.2, 0.2]]
+    case = SimpleNamespace(
+        grid=lambda _index: grid,
+        cell_info_for_active_cells=lambda: [
+            SimpleNamespace(grid_index=0, local_ijk=SimpleNamespace(i=index, j=0, k=0))
+            for index in range(3)
+        ],
+        time_steps=lambda: [date(2040, 1, 1), date(2041, 1, 1)],
+        grid_property=lambda _kind, _keyword, timestep, _grid: values_by_timestep[
+            timestep
+        ],
+    )
+    config = DistanceConfig.model_validate(
+        {
+            "distance-calculations": [
+                {
+                    "type": "polygon",
+                    "points": [[0, 0, 0], [3, 0, 0]],
+                    "properties": [
+                        {"name": "sgas", "threshold": 0.1, "date": "2040-01-01"},
+                        {"name": "swat", "threshold": 0.1, "date": "2041-01-01"},
+                    ],
+                    "aggregation": "max",
+                    "output": "P1_POLYGON_DISTANCE",
+                }
+            ]
+        }
+    )
+
+    assert run(config, case) == 0
+    assert (tmp_path / "P1_POLYGON_DISTANCE").read_text() == "1\n"
+    assert (
+        "SGAS >= 0.1 @ 2040-01-01 AND SWAT >= 0.1 @ 2041-01-01 (1 cells)"
         in capsys.readouterr().out
     )
 
@@ -487,7 +548,7 @@ def test_scalar_distances_only_measure_selected_cells(
             "distance-calculations": [
                 {
                     **target,
-                    "property": {"name": "SGAS", "threshold": 0.1, "date": report},
+                    "properties": [{"name": "SGAS", "threshold": 0.1, "date": report}],
                     "output": output,
                 }
                 for report, output in [

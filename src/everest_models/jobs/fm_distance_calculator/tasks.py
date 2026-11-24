@@ -20,7 +20,7 @@ type _DistanceLookup = tuple[
     Callable[[set[int]], _IndexedDistances], Callable[[], Sequence[float]]
 ]
 type _TargetLookup = Callable[[DistanceCalculation], _DistanceLookup]
-type _CellSelector = Callable[[PropertyFilter | None], set[int]]
+type _CellSelector = Callable[[Sequence[PropertyFilter]], set[int]]
 
 
 def point_to_segment_distance_3d(
@@ -329,24 +329,30 @@ def _make_cell_selector(
             )
         return matches
 
-    def selected_cells(property_filter: PropertyFilter | None) -> set[int]:
-        if property_filter is None:
+    def selected_cells(property_filters: Sequence[PropertyFilter]) -> set[int]:
+        if not property_filters:
             return active_indices
-        return matching_indices(
-            property_filter.name.upper(),
-            property_filter.threshold,
-            property_filter.date,
+        return set.intersection(
+            *(
+                matching_indices(
+                    property_filter.name.upper(),
+                    property_filter.threshold,
+                    property_filter.date,
+                )
+                for property_filter in property_filters
+            )
         )
 
     return selected_cells
 
 
-def _filter_label(property_filter: PropertyFilter | None) -> str:
-    if property_filter is None:
-        return "all active cells (no 'property' set)"
-    return (
+def _filter_label(property_filters: Sequence[PropertyFilter]) -> str:
+    if not property_filters:
+        return "all active cells (no 'properties' set)"
+    return " AND ".join(
         f"{property_filter.name.upper()} >= {property_filter.threshold:g} "
         f"@ {property_filter.date or 'all timesteps'}"
+        for property_filter in property_filters
     )
 
 
@@ -394,7 +400,7 @@ def _report_calculation(
         target_label = f"polyline of {len(calculation.points)} points"
     else:
         target_label = f"{calculation.type} {calculation.name}"
-    filter_label = _filter_label(calculation.property)
+    filter_label = _filter_label(calculation.properties)
     print(f"\n{calculation.output}  ->  {target_label}")
     print(f"  filter: {filter_label} ({cell_count} cells)")
     if calculation.type == "well" and well_connection_count is not None:
@@ -411,7 +417,7 @@ def _report_calculation(
 
 
 def _no_distance(calculation: DistanceCalculation) -> RuntimeError:
-    filter_label = _filter_label(calculation.property)
+    filter_label = _filter_label(calculation.properties)
     return RuntimeError(
         f"{calculation.output}: no finite positive distance exists for filter {filter_label!r}."
     )
@@ -457,7 +463,7 @@ def run(config: DistanceConfig, case: Any) -> int:
     )
 
     for calculation in config.distance_calculations:
-        indices = filter_cells(calculation.property)
+        indices = filter_cells(calculation.properties)
         verbose = config.verbose if calculation.verbose is None else calculation.verbose
         scalar_path = output_dir / calculation.output
         map_path = output_dir / f"{calculation.output}_map" if verbose else None

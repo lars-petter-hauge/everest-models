@@ -6,10 +6,12 @@ The three calculation types are `fault`, `well`, and `polygon`. Use `name`
 for a fault or simulation well and `points` for an open 3D polyline.
 
 
-The optional `property` mapping selects one dynamic reservoir property, with
-one inclusive `threshold` and an optional report `date`. If the date is
-omitted, cells that meet the threshold at any report are included. If
-`property` is omitted, all active cells are included.
+The optional `properties` list selects cells by dynamic reservoir property.
+Each entry has a property `name`, one inclusive `threshold` and an optional
+report `date`. If the date is omitted, cells that meet the threshold at any
+report are included. When several entries are given, a cell is selected only
+if it meets every entry; the entries may use different dates. If `properties`
+is omitted, all active cells are included.
 
 `aggregation` determines how distances from the selected cells to the
 objective are summarized: `min`, `max`, `mean`, or `median`. `output`
