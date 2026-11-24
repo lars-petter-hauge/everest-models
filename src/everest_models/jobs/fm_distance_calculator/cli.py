@@ -26,5 +26,5 @@ def main_entry_point(args=None):
     with ResInsight(options.resinsight) as instance:
         case = instance.project.load_case(str(egrid_path))
         if case is None:
-            raise RuntimeError(f"ResInsight could not load case: {egrid_path}")
-        return run(options.config, case)
+            parser.error(f"ResInsight could not load case: {egrid_path}")
+        run(options.config, case)
