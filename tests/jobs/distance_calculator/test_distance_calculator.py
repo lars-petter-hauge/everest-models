@@ -95,7 +95,7 @@ def test_load_config_validates_nested_property_and_polygon_points(tmp_path):
         ),
         pytest.param(
             {"properties": [{"name": "sgas", "date": ["2040-01-01"]}]},
-            "value_error",
+            "date_type",
             id="date-list",
         ),
         pytest.param(

@@ -1,4 +1,3 @@
-import re
 from datetime import date as Date
 from typing import Annotated, Any, Literal, get_args
 
@@ -24,17 +23,6 @@ class PropertyFilter(ModelConfig):
         default=None,
         description="Report date (YYYY-MM-DD). If omitted, use cells qualifying at any report.",
     )
-
-    @field_validator("date", mode="before")
-    @classmethod
-    def validate_report_date(cls, value: Any) -> Any:
-        if value is None or type(value) is Date:
-            return value
-        if isinstance(value, str) and re.fullmatch(
-            r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value.strip()
-        ):
-            return value.strip()
-        raise ValueError("Report date must be in YYYY-MM-DD format")
 
 
 class Calculation(ModelConfig):
